@@ -1,0 +1,27 @@
+mixin createPostForm(userLoggedIn)
+    .postFormContainer
+        .userImageContainer
+            img(src=userLoggedIn.profilePic alt="User's profile picture")
+        .textareaContainer    
+            textarea#postTextarea(placeholder="What's happening?")
+            .buttonsContainer
+                button#submitPostButton(disabled="") Post
+
+mixin createReplayModal(userLoggedIn)  
+    #replayModal.modal.fade(tabindex="-1" role="dialog" aria-labelledby="replayModalLabel" aria-hidden="true")
+      .modal-dialog(role="document")
+        .modal-content
+          .modal-header
+            h5#replayModalLabel.modal-title Replay
+            button.close(type="button" data-dismiss="modal" aria-label="Close")
+              span(aria-hidden="true") ×
+          .modal-body
+            #originalPostsContainer
+            .postFormContainer
+                .userImageContainer
+                    img(src=userLoggedIn.profilePic alt="User's profile picture")
+                .textareaContainer    
+                    textarea#replayTextarea(placeholder="What's happening?")
+          .modal-footer
+            button.btn.btn-secondary(type="button" data-dismiss="modal") Close
+            button#submitReplayButton.btn.btn-primary(type="button" disabled="") Replay
