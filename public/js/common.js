@@ -79,6 +79,11 @@ function createPostHtml(postData){
             Replaying to <a href="/profile/${replayToUsername}">@${replayToUsername}</a>
         </div>`
     }
+
+    var buttons = "";
+    if(postData.postedBy._id  == userLoggedInData._id){
+        buttons = `<button data-id="${postData._id}" data-toggle="modal" data-target ="#deletePostModal"><i class="fa fa-times"></i></button>`;
+    }
     return `<div class="post" data-id="${postData._id}">
                 <div class="mainContainer">
                     <div class="userImageContainer">
@@ -88,7 +93,8 @@ function createPostHtml(postData){
                         <div class="postHeader">
                             <a href="/profile/${postedBy.username}">${displayName}</a>
                             <span class="username">@${postedBy.username}</span>
-                            <span class="username">${timestmp}</span>    
+                            <span class="username">${timestmp}</span>
+                            ${buttons}    
                         </div>
                         ${replayFlag}
                         <div class="postBody">
@@ -213,7 +219,17 @@ $('#replayModal').on('hidden.bs.modal',(event)=>{
     $('#originalPostsContainer').html="";
     
 });
+$("#deletePostModal").on("show.bs.modal", (event) => {
+    var button = $(event.relatedTarget);
+    var postId = getPostIdFromElement(button);
+    $("#deletePostButton").data("id", postId);
+    
+    console.log($("#deletePostButton").data().id);
 
+    // $.get("/api/posts/" + postId, results => {
+    //     outputPosts(results.postData, $("#originalPostContainer"));
+    // })
+})
 
 //Function Which will retreet post id 
 // element -> button and will fallow the same ruls 
@@ -267,3 +283,28 @@ function outputPostsWithReplies(results, container) {
         container.append(html);
     });
 }
+
+// Fallowing/Fallowers
+$(document).on('click',".followButton",(e)=>{
+    var button = $(e.target);
+    var userId = button.data().user;
+
+    $.ajax({
+        url:`/api/users/${userId}/fallow`,
+        type:"PUT",
+        success:(data)=>{
+            console.log(data);
+            // button_like.find('span').text(postData.likes.length || "");
+
+            // if(postData.likes.includes(userLoggedInData._id)){
+            //     button_like.addClass('active')
+            // }else{
+            //     button_like.removeClass('active')
+            // }
+        }
+    });
+
+    
+});
+
+

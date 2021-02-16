@@ -8,7 +8,7 @@ const UserSchema = new Schema({
     username: { type: String, required: true, trim: true, unique: true },
     email: { type: String, required: true, trim: true, unique: true },
     password: { type: String, required: true },
-    profilePic: { type: String, default: "/images/profilePic.png" },
+    profilePic: { type: String, default: "/images/profilePic.jpeg" },
     // Like Functionality 
     likes:[
         { 
@@ -20,6 +20,18 @@ const UserSchema = new Schema({
         { 
         type:mongoose.Schema.Types.ObjectId,
         ref:'Post'
+        }
+    ],
+    following:[
+        { 
+            type:mongoose.Schema.Types.ObjectId,
+            ref:'User'
+        }
+    ],
+    followers:[
+        { 
+            type:mongoose.Schema.Types.ObjectId,
+            ref:'User'
         }
     ]
 }, { timestamps: true });

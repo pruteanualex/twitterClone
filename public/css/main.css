@@ -1,12 +1,16 @@
 :root {
     --blue: #1FA2F1;
     --blueLight: #9BD1F9;
+    --blueBackground: rgba(212, 237, 255, 0.6);
     --buttonHoverBg: #d4edff;
     --lightGrey: rgb(230, 236, 240);
     --spacing: 15px;
     --greyText: rgb(101, 119, 134);
     --greyButtonText: rgba(0,0,0,0.34);
-    --red:rgb(266,34,94);
+    --red: rgb(226,34,94);
+    --redBackground: rgba(226,34,94,0.1);
+    --green: rgb(23,191,99);
+    --greenBackground: rgba(23,191,99,0.1);
 }
 
 * {
@@ -61,10 +65,12 @@ button {
     border: none;
     color: var(--greyButtonText);
 }
+
 button i,
-button span{
+button span {
     pointer-events: none;
 }
+
 .mainSectionContainer {
     padding:  0;
     border-left: 1px solid var(--lightGrey);
@@ -85,9 +91,7 @@ button span{
 .titleContainer h1 {
     flex: 1;
 }
-.modal .post{
-    padding: 0 0 var(--spacing) 0;
-}
+
 .postFormContainer {
     display: flex;
     padding: var(--spacing);
@@ -95,10 +99,14 @@ button span{
     flex-shrink: 0;
 }
 
-.modal .postFormContainer{
-    border-bottom: 0px solid rgb(230, 236, 240);
+.modal .postFormContainer {
+    border: none;
     padding: 0;
-    padding-top: 8px;
+    padding-top: var(--spacing);
+}
+
+.modal .post {
+    padding: 0 0 var(--spacing) 0;
 }
 
 .userImageContainer {
@@ -195,12 +203,146 @@ button span{
     border-radius: 50%;
 }
 
-.postButtonContainer.red button.active{
-    color: var(--red)
+.postButtonContainer.red button.active {
+    color: var(--red);
 }
-.replayFlag {
+
+.postButtonContainer.red button:hover {
+    color: var(--red);
+    background-color: var(--redBackground)
+}
+
+.postButtonContainer.green button.active {
+    color: var(--green);
+}
+
+.postButtonContainer.green button:hover {
+    color: var(--green);
+    background-color: var(--greenBackground)
+}
+
+.postActionContainer {
+    padding-left: 35px;
+    font-size: 13px;
+    color: var(--greyText);
     margin-bottom: 5px;
 }
-.replayFlag a{
+
+.replyFlag {
+    margin-bottom: 5px;
+}
+
+.replyFlag a {
     color: var(--blue);
+}
+
+.post.largeFont .postBody,
+.post.largeFont .postFooter {
+    font-size: 23px;
+}
+
+.postContentContainer .header {
+    display: flex;
+}
+
+.postContentContainer .header .date {
+    flex: 1;
+}
+
+.errorMessage {
+    padding: var(--spacing);
+}
+
+.coverPhotoContainer {
+    height: 180px;
+    background-color: var(--blue);
+    position: relative;
+}
+
+.profileHeaderContainer .userImageContainer {
+    width: 132px;
+    height: 132px;
+    margin-left: var(--spacing);
+    position: absolute;
+    bottom: -66px;
+}
+
+.profileHeaderContainer .userImageContainer img {
+    border: 4px solid #fff;
+}
+
+.profileHeaderContainer .profileButtonsContainer {
+    text-align: right;
+    padding: var(--spacing);
+    min-height: 66px;
+}
+
+.profileButton,
+.followButton {
+    border: 1px solid var(--blue);
+    color: var(--blue);
+    font-weight: bold;
+    padding: 5px 15px;
+    border-radius: 60px;
+    display: inline-block;
+    margin-left: var(--spacing);
+}
+
+.profileButton:hover,
+.followButton:hover {
+    background-color: var(--blueBackground);
+}
+
+.followButton.following {
+    background-color: var(--blue);
+    color: #fff;
+}
+
+.profileHeaderContainer .userDetailsContainer {
+    display: flex;
+    flex-direction: column;
+    padding: 0 var(--spacing);
+}
+
+.followersContainer .value {
+    font-weight: bold;
+    margin-right: 5px;
+}
+
+.followersContainer span:not(.value) {
+    color: var(--greyText);
+}
+
+.followersContainer a {
+    margin-right: 15px;
+}
+
+.followersContainer a:hover {
+    border-bottom: 1px solid #000;
+}
+
+.tabsContainer {
+    display: flex;
+    border-bottom: 1px solid var(--lightGrey);
+    flex-shrink: 0;
+}
+
+.tab {
+    flex: 1;
+    height: 52px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    color: var(--greyText);
+    font-weight: bold;
+}
+
+.tab.active {
+    color: var(--blue);
+    border-bottom: 2px solid var(--blue);
+}
+
+.tab:hover {
+    color: var(--blue);
+    background-color: var(--blueBackground);
 }
