@@ -53,9 +53,61 @@ $("#submitPostButton,#submitReplayButton").click((ev)=>{
 
 });
 
+
+// Fallowing/Fallowers
+$(document).on("click", ".followButton", (e) => {
+    var button = $(e.target);
+    var userId = button.data().user;
+    
+    $.ajax({
+        url: `/api/users/${userId}/follow`,
+        type: "PUT",
+        success: (data,status,xhr) => {   
+           if(xhr.status == 404){
+               alert('User not found');
+                return;
+           }
+            
+           var diference = 1;
+            if(data.following && data.following.includes(userId)) {
+                button.addClass("following");
+                button.text('Following')
+            }
+            else {
+                button.removeClass("following");
+                button.text('Follow')
+                diference = -1;
+            }
+
+
+            var fallowersLabel = $('#fallowersVal');
+            if(fallowersLabel.length != 0){
+              var falowersText =  fallowersLabel.text();
+              falowersText = parseInt(falowersText);
+              fallowersLabel.text(falowersText + diference);
+            }
+
+        }
+    })
+});
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 function createPostHtml(postData){
     var postedBy = postData.postedBy;
-    console.log(postedBy)
+    //console.log(postedBy)
     if(postedBy._id === undefined){
         return console.log('User object not populated')
     }
@@ -79,6 +131,11 @@ function createPostHtml(postData){
             Replaying to <a href="/profile/${replayToUsername}">@${replayToUsername}</a>
         </div>`
     }
+
+    var buttons = "";
+    if(postData.postedBy._id  == userLoggedInData._id){
+        buttons = `<button data-id="${postData._id}" data-toggle="modal" data-target ="#deletePostModal"><i class="fa fa-times"></i></button>`;
+    }
     return `<div class="post" data-id="${postData._id}">
                 <div class="mainContainer">
                     <div class="userImageContainer">
@@ -88,7 +145,8 @@ function createPostHtml(postData){
                         <div class="postHeader">
                             <a href="/profile/${postedBy.username}">${displayName}</a>
                             <span class="username">@${postedBy.username}</span>
-                            <span class="username">${timestmp}</span>    
+                            <span class="username">${timestmp}</span>
+                            ${buttons}    
                         </div>
                         ${replayFlag}
                         <div class="postBody">
@@ -213,7 +271,17 @@ $('#replayModal').on('hidden.bs.modal',(event)=>{
     $('#originalPostsContainer').html="";
     
 });
+$("#deletePostModal").on("show.bs.modal", (event) => {
+    var button = $(event.relatedTarget);
+    var postId = getPostIdFromElement(button);
+    $("#deletePostButton").data("id", postId);
+    
+    console.log($("#deletePostButton").data().id);
 
+    // $.get("/api/posts/" + postId, results => {
+    //     outputPosts(results.postData, $("#originalPostContainer"));
+    // })
+})
 
 //Function Which will retreet post id 
 // element -> button and will fallow the same ruls 
@@ -233,33 +301,32 @@ function getPostIdFromElement(element){
 
 
 
-function outPutPosts(results,container){
-    container.html(""); 
+function outputPosts(results, container) {
+    container.html("");
 
-    if(!Array.isArray(results)){
-        results = [results]
+    if(!Array.isArray(results)) {
+        results = [results];
     }
 
     results.forEach(result => {
-        var html = createPostHtml(result);
-        container.append(html)
-    }); 
-    if(results == 0){
-        container.append('<span class="noResults">Nothing to show</span>')
+        var html = createPostHtml(result)
+        container.append(html);
+    });
+
+    if (results.length == 0) {
+        container.append("<span class='noResults'>Nothing to show.</span>")
     }
 }
 
-
 function outputPostsWithReplies(results, container) {
     container.html("");
-    console.log(results)
 
     if(results.replyTo !== undefined && results.replyTo._id !== undefined) {
         var html = createPostHtml(results.replyTo)
         container.append(html);
     }
 
-    var mainPostHtml = createPostHtml(results.postData)
+    var mainPostHtml = createPostHtml(results.postData, true)
     container.append(mainPostHtml);
 
     results.replies.forEach(result => {
@@ -267,3 +334,7 @@ function outputPostsWithReplies(results, container) {
         container.append(html);
     });
 }
+
+
+
+
