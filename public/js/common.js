@@ -1,3 +1,8 @@
+//Globals
+var cropper;
+
+
+
 $('#postTextarea,#replayTextarea').keyup((event)=>{
 
     event.preventDefault();
@@ -94,10 +99,61 @@ $(document).on("click", ".followButton", (e) => {
 
 
 
+//Cropper JS
+const croppUserProfieImg = document.getElementById('filePhoto');
+if(croppUserProfieImg){
+croppUserProfieImg.addEventListener('change',function(event){
+    // var input = $(event.target);
+    
+    if(this.files && this.files[0]){
+        var reader = new FileReader();
+        reader.onload = (e)=>{
+            var image = document.getElementById('imagePreview');
+            image.src =e.target.result;
+
+           if(cropper !== undefined){
+                cropper.destroy()
+           }
+        
+           cropper = new  Cropper(image,{
+             aspectRatio: 1 / 1,
+             background:false
+           })
+
+        }
+
+        reader.readAsDataURL(this.files[0]);
+    }else{
+        console.log('none');
+    }
+  });
+}
+
+$('#imageUploadButton').click(()=>{
+    var canvas = cropper.getCroppedCanvas();
+
+    if(canvas == null){
+        console.log('Could not upload image. Make sure it is an image file');
+        return;
+    }
 
 
+    canvas.toBlob((blob)=>{
+        var formData = new FormData();
+        formData.append('croppedImage',blob);
 
-
+        $.ajax({
+            url:'/api/users/profilePicture',
+            type:'POST',
+            data:formData,
+            processData:false,
+            contentType:false,
+            success:()=>{
+                location.reload();
+            }
+        })
+    });
+})
 
 
 

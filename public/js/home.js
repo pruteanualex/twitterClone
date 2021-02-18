@@ -1,6 +1,6 @@
 $(document).ready(()=>{
-
-    $.get("/api/posts",{fallowingOnly:true},(results)=>{
+//,{fallowingOnly:true},
+    $.get("/api/posts",(results)=>{
         outPutPosts(results,$('.postContainer'));
       });
 
