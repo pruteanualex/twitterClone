@@ -158,6 +158,62 @@ $('#imageUploadButton').click(()=>{
 
 
 
+//Cropper JS
+const croppUserCoverImg = document.getElementById('coverPhoto');
+if(croppUserCoverImg){
+    croppUserCoverImg.addEventListener('change',function(event){
+    // var input = $(event.target);
+    
+    if(this.files && this.files[0]){
+        var reader = new FileReader();
+        reader.onload = (e)=>{
+            var image = document.getElementById('coverPreview');
+            image.src =e.target.result;
+
+           if(cropper !== undefined){
+                cropper.destroy()
+           }
+        
+           cropper = new  Cropper(image,{
+             aspectRatio: 16 / 9,
+             background:false
+           })
+
+        }
+
+        reader.readAsDataURL(this.files[0]);
+    }else{
+        console.log('none');
+    }
+  });
+}
+
+$('#coverUploadButton').click(()=>{
+    var canvas = cropper.getCroppedCanvas();
+
+    if(canvas == null){
+        console.log('Could not upload image. Make sure it is an image file');
+        return;
+    }
+
+
+    canvas.toBlob((blob)=>{
+        var formData = new FormData();
+        formData.append('croppedCoverPhoto',blob);
+
+        $.ajax({
+            url:'/api/users/coverPhoto',
+            type:'POST',
+            data:formData,
+            processData:false,
+            contentType:false,
+            success:()=>{
+                location.reload();
+            }
+        })
+    });
+})
+
 
 
 
@@ -190,7 +246,18 @@ function createPostHtml(postData){
 
     var buttons = "";
     if(postData.postedBy._id  == userLoggedInData._id){
-        buttons = `<button data-id="${postData._id}" data-toggle="modal" data-target ="#deletePostModal"><i class="fa fa-times"></i></button>`;
+        var pinnedClass = "";
+        var pinnedPostText = "";
+        var dataTarget = "#confirmPinModal"
+        if(postData.pinned === true){
+            pinnedClass ="active";
+            dataTarget ="#unPinModal";
+            pinnedPostText = "<i class='fa fa-thumbtack'></i> <span>Pinned post</span>";
+        }
+
+        buttons = `
+            <button class='pinButton ${pinnedClass}' data-id="${postData._id}" data-toggle="modal" data-target ="${dataTarget}"><i class="fa fa-thumbtack"></i></button>
+            <button data-id="${postData._id}" data-toggle="modal" data-target ="#deletePostModal"><i class="fa fa-times"></i></button>`;
     }
     return `<div class="post" data-id="${postData._id}">
                 <div class="mainContainer">
@@ -198,6 +265,7 @@ function createPostHtml(postData){
                         <img src="${postedBy.profilePic}">
                     </div>
                     <div class="postContentContainer">
+                        <div class="pinnedPostText">${pinnedPostText}</div>
                         <div class="postHeader">
                             <a href="/profile/${postedBy.username}">${displayName}</a>
                             <span class="username">@${postedBy.username}</span>
@@ -230,6 +298,14 @@ function createPostHtml(postData){
                 </div>
             </div>`;
 }
+
+
+
+
+
+
+
+
 
 //Has 2 parameters
 function timeDifference(current, previous) {
@@ -338,6 +414,69 @@ $("#deletePostModal").on("show.bs.modal", (event) => {
     //     outputPosts(results.postData, $("#originalPostContainer"));
     // })
 })
+
+
+//Pin Post
+$("#confirmPinModal").on("show.bs.modal", (event) => {
+    var button = $(event.relatedTarget);
+    var postId = getPostIdFromElement(button);
+    $("#pinPostdButton").data("id", postId);
+
+});
+
+//Un Pin Post 
+$("#unPinModal").on("show.bs.modal", (event) => {
+    var button = $(event.relatedTarget);
+    var postId = getPostIdFromElement(button);
+    $("#unpinPostdButton").data("id", postId);
+
+});
+
+//Pin Post Ajax
+$('#pinPostdButton').click((event)=>{
+    var postId = $(event.target).data('id');
+
+    $.ajax({
+        url:`/api/posts/${postId}`,
+        type:'PUT',
+        data:{pinned:true},
+        success:(data,status,xhr) =>{
+
+            if(xhr.status != 204){
+                alert('coud not pin the post');
+                return;
+            }
+
+            location.reload();
+
+        }
+    });
+})
+
+
+
+//Un Pin Post Ajax
+$('#unpinPostdButton').click((event)=>{
+    var postId = $(event.target).data('id');
+
+    $.ajax({
+        url:`/api/posts/${postId}`,
+        type:'PUT',
+        data:{pinned:false},
+        success:(data,status,xhr) =>{
+
+            if(xhr.status != 204){
+                alert('coud not pin the post');
+                return;
+            }
+
+            location.reload();
+
+        }
+    });
+})
+
+
 
 //Function Which will retreet post id 
 // element -> button and will fallow the same ruls 

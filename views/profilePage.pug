@@ -12,7 +12,13 @@ block content
         -fallowingCount = profileUser.following.length
        
         .profileHeaderContainer
-            .coverPhotoContainer
+            .coverPhotoSection
+                .coverPhotoContainer
+                    if profileUser.coverPhoto
+                        img(src=profileUser.coverPhoto, alt="User's cover photo")
+                    if profileUser._id == userLoggedIn._id
+                        button.coverPhotoButton(data-toggle="modal", data-target="#coverUploadModal")
+                            i.fas.fa-camera
 
                 .userImageContainer
                     img(src=profileUser.profilePic, alt="User profile image")
@@ -45,11 +51,12 @@ block content
             +createTab("Posts", `/profile/${profileUser.username}`, selectedTab != "replies")
             +createTab("Replies", `/profile/${profileUser.username}/replies`, selectedTab == "replies")
 
-
+        .pinnedPostController
         .postsContainer
 
         +createPostModals(userLoggedIn)
         +createImageUploadModal()
+        +createcoverUploadModal()
 
 block scripts
     script(src="/js/profile.js")

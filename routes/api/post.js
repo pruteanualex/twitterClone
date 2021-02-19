@@ -68,9 +68,6 @@ router.get("/:id", async (req, res, next) => {
 })
 
 
-
-
-
 router.post("/", async(req, res, next) => {
    
    
@@ -156,6 +153,34 @@ router.put("/:id/like", async(req, res, next) => {
 
     res.status(200).send(post)
 });
+
+router.delete("/:id", (req, res, next) => {
+    Post.findByIdAndDelete(req.params.id)
+    .then(() => res.sendStatus(202))
+    .catch(error => {
+        console.log(error);
+        res.sendStatus(400);
+    })
+});
+
+router.put("/:id", async (req, res, next) => {
+
+    if(req.body.pinned !== undefined){
+        await Post.updateMany({postedBy:req.session.user},{pinned:false})
+        .catch(error => {
+            console.log(error);
+            res.sendStatus(400);
+        })
+    }
+
+    Post.findByIdAndUpdate(req.params.id,req.body)
+    .then(() => res.sendStatus(204))
+    .catch(error => {
+        console.log(error);
+        res.sendStatus(400);
+    })
+})
+
 
 
 async function getPosts(filter) {
