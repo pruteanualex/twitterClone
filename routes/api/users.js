@@ -11,6 +11,30 @@ const Post = require('../../schemas/postsSchema');
 
 app.use(bodyParser.urlencoded({ extended: false }));
 
+
+router.get("/", async (req, res)=>{
+  var searchObject = req.query;
+
+  if(req.query.search !== undefined){
+    searchObject = {
+        $or:[
+            {firstName:{$regex: req.query.search,$options:"i"}},
+            {lastName:{$regex: req.query.search,$options:"i"}},
+            {username:{$regex: req.query.search,$options:"i"}}
+        ]
+    }
+  }
+  await  User.find(searchObject).then(results =>{
+      res.status(200).send(results);
+  }).catch(error =>{
+      console.log(error);
+      res.sendStatus(400);
+
+  })
+});
+
+
+
 router.put("/:userId/follow", async (req, res, next) => {
 
     var userId = req.params.userId;
