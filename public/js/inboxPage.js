@@ -21,13 +21,14 @@ function outputChatList(chatList, container){
 }
 function createChatHtml(chatData){
     var chatName = getChatName(chatData);
-    var image = ''; //TODO
+    var image = getChatImageElements(chatData);
     var latestMessage = "This the lates message"//TODO
 
     return `<a class="resultListItem"  href='/messages/${chatData._id}'>
+                ${image}
                 <div class="resultsDetailsContainer">
-                    <span class="heading">${chatName}</span>
-                    <span class="subText">${latestMessage}</span>
+                    <span class="heading ellipsis">${chatName}</span>
+                    <span class="subText ellipsis">${latestMessage}</span>
                 </div>
             </a>`
 
@@ -63,6 +64,8 @@ function getChatImageElements(chatData){
         groupChatClass = "groupChatImage";
         chatImage += getUserChatImageElement(otherChatUsers[1]); 
     }
+
+    return `<div class="resultsImageContainer ${groupChatClass}">${chatImage}</div>`;
 }
 
 function getUserChatImageElement(user){
