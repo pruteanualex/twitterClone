@@ -634,3 +634,6 @@ button.pinButton.active{
 .chatImagesContainer .userCount{
     margin-left: -10px; 
 }
+#chatNameTextBox{
+    width: 100%;
+}

@@ -681,6 +681,23 @@ function outputPostsWithReplies(results, container) {
 
 
 
+function getChatName(chatData){
+    var chatName = chatData.chatName;
+    if(!chatName){
+        var otherChatUsers = getOtherChatsUsers(chatData.users);
+        var namesArray = otherChatUsers.map(user =>user.firstName + " " + user.lastName);
+        chatName =  namesArray.join(", ");
+    }
+    return chatName;
+}
 
+function getOtherChatsUsers(users){
+    if(users.length == 1) return users;
+
+    return users.filter((user)=>{
+        return user._id != userLoggedInData._id;
+    });
+
+}
 
 
