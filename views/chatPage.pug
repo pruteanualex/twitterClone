@@ -14,7 +14,9 @@ block content
                 span#chatName(data-toggle="modal", data-target="#chatNameModal")
             
             .mainContentContainer
-                .chatContainer
+                .loadingSpinnerContainer 
+                    img(src="/images/1_F_5AEXIfr1AXuShXhYT4zg.gif" alt="loading spinner")
+                .chatContainer(style="visibility:hidden")
                     ul.chatMessages
                     .footer
                         textarea.inputTextBox(name="messageInput", placeholder="Type a message...")
