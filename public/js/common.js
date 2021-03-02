@@ -701,3 +701,10 @@ function getOtherChatsUsers(users){
 }
 
 
+function messageRecived(newMessage){
+    if($('.chatContainer').length == 0){
+        //Show Popup Notification
+    }else{
+        addChatMessageHtml(newMessage);
+    }
+}

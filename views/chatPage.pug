@@ -15,9 +15,11 @@ block content
             
             .mainContentContainer
                 .loadingSpinnerContainer 
-                    img(src="/images/1_F_5AEXIfr1AXuShXhYT4zg.gif" alt="loading spinner")
+                    img(src="/images/loadingSpinner.gif" style="width:100px" alt="loading spinner")
                 .chatContainer(style="visibility:hidden")
                     ul.chatMessages
+                    .typingDots 
+                        img(src="/images/dots.gif" alt="Typing Dots")
                     .footer
                         textarea.inputTextBox(name="messageInput", placeholder="Type a message...")
                         button.sendMessageButton

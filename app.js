@@ -9,7 +9,10 @@ const mongoose = require("./database");
 const session = require("express-session");
 dotenv.config({path:'./config.env'});
 
+
 const server = app.listen(port, () => console.log("Server listening on port " + port));
+//Install Socket IO
+const io = require('socket.io')(server,{pingTimeout:60000});
 
 app.set("view engine", "pug");
 app.set("views", "views");
@@ -38,6 +41,7 @@ const postApiRoute = require('./routes/api/post');
 const userApiRoute  = require('./routes/api/users');
 const chatsApiRoute  = require('./routes/api/chats');
 const messageApiRoute = require('./routes/api/messages');
+const { Console } = require('console');
 
 app.use("/login", loginRoute);
 app.use("/register", registerRoute);
@@ -67,3 +71,35 @@ app.get("/", middleware.requireLogin, (req, res, next) => {
  
     res.status(200).render("home", payload);
 })
+
+
+io.on("connection",(socket)=>{
+    
+    socket.on("setup",(userData)=>{
+        socket.join(userData._id);
+        socket.emit("connected")
+    })
+
+    socket.on('join room', (room)=>{
+        socket.join(room);
+    });
+
+    socket.on('typing', (room)=>{
+        socket.in(room).emit('typing');
+    });
+
+    socket.on('stop typing',(room)=>{
+        socket.in(room).emit('stop typing');
+    });
+    //Dose not work because user.id is undefinde
+    //Answer message.js controller
+    socket.on('new message',(newMessage)=>{
+        var chat = newMessage.chat;
+        if(!chat.users) return console.log('Chat.users not defined')
+        chat.users.forEach(user => {
+            if(user._id == newMessage.sender._id) return;
+            socket.in(user._id).emit('message received',newMessage);
+        });
+    })
+
+});
