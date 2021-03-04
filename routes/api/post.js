@@ -4,6 +4,7 @@ const router = express.Router();
 const bodyParser = require("body-parser")
 const User = require('../../schemas/UserSchema');
 const Post = require('../../schemas/postsSchema');
+const Notification = require('../../schemas/notificationSchema');
 
 
 
@@ -98,6 +99,12 @@ router.post("/", async(req, res, next) => {
             newPost = await User.populate(newPost,{
                 path:'postedBy'
             })
+            newPost = await Post.populate(newPost,{
+                path:'replayTo'
+            })
+            if(newPost.replayTo !== undefined){
+               await Notification.insertNotification(newPost.replayTo.postedBy,req.session.user._id,"replay",newPost._id);
+            }
             res.status(201).send(newPost)
         })
         .catch((error)=>{
@@ -154,7 +161,9 @@ router.put("/:id/like", async(req, res, next) => {
         console.log(error);
         res.sendStatus(400);
     });
-
+    if(!isLiked){
+        Notification.insertNotification(post.postedBy,userId,"postLike",post._id)
+    }
 
     res.status(200).send(post)
 });

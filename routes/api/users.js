@@ -8,6 +8,7 @@ const router = express.Router();
 const bodyParser = require("body-parser")
 const User = require('../../schemas/UserSchema');
 const Post = require('../../schemas/postsSchema');
+const Notification = require('../../schemas/notificationSchema');
 
 app.use(bodyParser.urlencoded({ extended: false }));
 
@@ -74,6 +75,9 @@ router.put("/:userId/follow", async (req, res, next) => {
         res.sendStatus(400);
     });
 
+    if(!isFallowind){
+        await Notification.insertNotification(userId,req.session.user._id,"fallow",req.session.user._id)
+    }
 
     res.status(200).send(req.session.user);
 
