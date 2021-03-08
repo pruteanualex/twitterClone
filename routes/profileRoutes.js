@@ -25,6 +25,33 @@ router.get("/:username", async (req, res, next) => {
     res.status(200).render("profilePage", payload);
 })
 
+
+router.get("/:username/replies", async (req, res, next) => {
+
+    var payload = await getPayload(req.params.username, req.session.user);
+    payload.selectedTab = "replies";
+    
+    res.status(200).render("profilePage", payload);
+})
+
+
+
+router.get("/:username/following", async (req, res, next) => {
+
+    var payload = await getPayload(req.params.username, req.session.user);
+    payload.selectedTab = "fallowing";
+    
+    res.status(200).render("fallowersAndFallowing", payload);
+})
+router.get("/:username/followers", async (req, res, next) => {
+
+    var payload = await getPayload(req.params.username, req.session.user);
+    payload.selectedTab = "fallowers";
+    
+    res.status(200).render("fallowersAndFallowing", payload);
+})
+
+
 async function getPayload(username, userLoggedIn) {
     var user = await User.findOne({ username: username })
 

@@ -1,3 +1,9 @@
+//Globals
+var cropper;
+var timer;
+var selectedUsers = [];
+
+
 $('#postTextarea,#replayTextarea').keyup((event)=>{
 
     event.preventDefault();
@@ -53,9 +59,168 @@ $("#submitPostButton,#submitReplayButton").click((ev)=>{
 
 });
 
+
+// Fallowing/Fallowers
+$(document).on("click", ".followButton", (e) => {
+    var button = $(e.target);
+    var userId = button.data().user;
+    
+    $.ajax({
+        url: `/api/users/${userId}/follow`,
+        type: "PUT",
+        success: (data,status,xhr) => {   
+           if(xhr.status == 404){
+               alert('User not found');
+                return;
+           }
+            
+           var diference = 1;
+            if(data.following && data.following.includes(userId)) {
+                button.addClass("following");
+                button.text('Following')
+            }
+            else {
+                button.removeClass("following");
+                button.text('Follow')
+                diference = -1;
+            }
+
+
+            var fallowersLabel = $('#fallowersVal');
+            if(fallowersLabel.length != 0){
+              var falowersText =  fallowersLabel.text();
+              falowersText = parseInt(falowersText);
+              fallowersLabel.text(falowersText + diference);
+            }
+
+        }
+    })
+});
+
+
+
+
+//Cropper JS
+const croppUserProfieImg = document.getElementById('filePhoto');
+if(croppUserProfieImg){
+croppUserProfieImg.addEventListener('change',function(event){
+    // var input = $(event.target);
+    
+    if(this.files && this.files[0]){
+        var reader = new FileReader();
+        reader.onload = (e)=>{
+            var image = document.getElementById('imagePreview');
+            image.src =e.target.result;
+
+           if(cropper !== undefined){
+                cropper.destroy()
+           }
+        
+           cropper = new  Cropper(image,{
+             aspectRatio: 1 / 1,
+             background:false
+           })
+
+        }
+
+        reader.readAsDataURL(this.files[0]);
+    }else{
+        console.log('none');
+    }
+  });
+}
+
+$('#imageUploadButton').click(()=>{
+    var canvas = cropper.getCroppedCanvas();
+
+    if(canvas == null){
+        console.log('Could not upload image. Make sure it is an image file');
+        return;
+    }
+
+
+    canvas.toBlob((blob)=>{
+        var formData = new FormData();
+        formData.append('croppedImage',blob);
+
+        $.ajax({
+            url:'/api/users/profilePicture',
+            type:'POST',
+            data:formData,
+            processData:false,
+            contentType:false,
+            success:()=>{
+                location.reload();
+            }
+        })
+    });
+})
+
+
+
+
+//Cropper JS
+const croppUserCoverImg = document.getElementById('coverPhoto');
+if(croppUserCoverImg){
+    croppUserCoverImg.addEventListener('change',function(event){
+    // var input = $(event.target);
+    
+    if(this.files && this.files[0]){
+        var reader = new FileReader();
+        reader.onload = (e)=>{
+            var image = document.getElementById('coverPreview');
+            image.src =e.target.result;
+
+           if(cropper !== undefined){
+                cropper.destroy()
+           }
+        
+           cropper = new  Cropper(image,{
+             aspectRatio: 16 / 9,
+             background:false
+           })
+
+        }
+
+        reader.readAsDataURL(this.files[0]);
+    }else{
+        console.log('none');
+    }
+  });
+}
+
+$('#coverUploadButton').click(()=>{
+    var canvas = cropper.getCroppedCanvas();
+
+    if(canvas == null){
+        console.log('Could not upload image. Make sure it is an image file');
+        return;
+    }
+
+
+    canvas.toBlob((blob)=>{
+        var formData = new FormData();
+        formData.append('croppedCoverPhoto',blob);
+
+        $.ajax({
+            url:'/api/users/coverPhoto',
+            type:'POST',
+            data:formData,
+            processData:false,
+            contentType:false,
+            success:()=>{
+                location.reload();
+            }
+        })
+    });
+})
+
+
+
+
 function createPostHtml(postData){
     var postedBy = postData.postedBy;
-    console.log(postedBy)
+    //console.log(postedBy)
     if(postedBy._id === undefined){
         return console.log('User object not populated')
     }
@@ -82,7 +247,18 @@ function createPostHtml(postData){
 
     var buttons = "";
     if(postData.postedBy._id  == userLoggedInData._id){
-        buttons = `<button data-id="${postData._id}" data-toggle="modal" data-target ="#deletePostModal"><i class="fa fa-times"></i></button>`;
+        var pinnedClass = "";
+        var pinnedPostText = "";
+        var dataTarget = "#confirmPinModal"
+        if(postData.pinned === true){
+            pinnedClass ="active";
+            dataTarget ="#unPinModal";
+            pinnedPostText = "<i class='fa fa-thumbtack'></i> <span>Pinned post</span>";
+        }
+
+        buttons = `
+            <button class='pinButton ${pinnedClass}' data-id="${postData._id}" data-toggle="modal" data-target ="${dataTarget}"><i class="fa fa-thumbtack"></i></button>
+            <button data-id="${postData._id}" data-toggle="modal" data-target ="#deletePostModal"><i class="fa fa-times"></i></button>`;
     }
     return `<div class="post" data-id="${postData._id}">
                 <div class="mainContainer">
@@ -90,6 +266,7 @@ function createPostHtml(postData){
                         <img src="${postedBy.profilePic}">
                     </div>
                     <div class="postContentContainer">
+                        <div class="pinnedPostText">${pinnedPostText}</div>
                         <div class="postHeader">
                             <a href="/profile/${postedBy.username}">${displayName}</a>
                             <span class="username">@${postedBy.username}</span>
@@ -122,6 +299,63 @@ function createPostHtml(postData){
                 </div>
             </div>`;
 }
+
+
+
+
+function outputUsers(results,container){
+    container.html("");
+
+    if(results.length == "" || results.length == 0){
+        container.append('<span class="noResults">No results found</span>')
+    }else{
+
+    results.forEach(results => {
+       var html =createUserHtml(results,true);
+       container.append(html);
+    });
+}
+
+}
+
+
+
+function createUserHtml(userData, showFollowButton) {
+    var userLoggedIn = userLoggedInData;
+
+    var name = userData.firstName + " " + userData.lastName;
+    var isFollowing = userLoggedIn.following && userLoggedIn.following.includes(userData._id);
+    var text = isFollowing ? "Following" : "Follow"
+    var buttonClass = isFollowing ? "followButton following" : "followButton"
+
+    var followButton = "";
+    if (showFollowButton && userLoggedIn._id != userData._id) {
+        followButton = `<div class='followButtonContainer'>
+                            <button class='${buttonClass}' data-user='${userData._id}'>${text}</button>
+                        </div>`;
+    }
+
+    return `<div class='user'>
+                <div class='userImageContainer'>
+                    <img src='${userData.profilePic}'>
+                </div>
+                <div class='userDetailsContainer'>
+                    <div class='header'>
+                        <a href='/profile/${userData.username}'>${name}</a>
+                        <span class='username'>@${userData.username}</span>
+                    </div>
+                </div>
+                ${followButton}
+            </div>`;
+}
+
+
+
+
+
+
+
+
 
 //Has 2 parameters
 function timeDifference(current, previous) {
@@ -231,6 +465,166 @@ $("#deletePostModal").on("show.bs.modal", (event) => {
     // })
 })
 
+
+//Pin Post
+$("#confirmPinModal").on("show.bs.modal", (event) => {
+    var button = $(event.relatedTarget);
+    var postId = getPostIdFromElement(button);
+    $("#pinPostdButton").data("id", postId);
+
+});
+
+//Un Pin Post 
+$("#unPinModal").on("show.bs.modal", (event) => {
+    var button = $(event.relatedTarget);
+    var postId = getPostIdFromElement(button);
+    $("#unpinPostdButton").data("id", postId);
+
+});
+
+//Pin Post Ajax
+$('#pinPostdButton').click((event)=>{
+    var postId = $(event.target).data('id');
+
+    $.ajax({
+        url:`/api/posts/${postId}`,
+        type:'PUT',
+        data:{pinned:true},
+        success:(data,status,xhr) =>{
+
+            if(xhr.status != 204){
+                alert('coud not pin the post');
+                return;
+            }
+
+            location.reload();
+
+        }
+    });
+})
+
+
+
+//Un Pin Post Ajax
+$('#unpinPostdButton').click((event)=>{
+    var postId = $(event.target).data('id');
+
+    $.ajax({
+        url:`/api/posts/${postId}`,
+        type:'PUT',
+        data:{pinned:false},
+        success:(data,status,xhr) =>{
+
+            if(xhr.status != 204){
+                alert('coud not pin the post');
+                return;
+            }
+
+            location.reload();
+
+        }
+    });
+})
+
+
+//////////////////////////////////////////////////////////////////
+//Chat Functionality  Code Must To Fallow
+
+$('#userSearchTextbox').keydown((event)=>{
+    clearTimeout(timer);
+    var textBox = $(event.target);
+    var value = textBox.val();
+
+    if(value == "" && (event.which == 8 || event.keyCode == 8)){
+        //Remove Elements From Chat
+        selectedUsers.pop();
+        updateSelectedUsersHTML();
+        $('.resultsContainer').html("");
+        
+        if(selectedUsers.length == 0){
+            $('#createChatButton').prop("disabled",true);
+        }
+        return;
+    }
+
+    timer = setTimeout(()=>{
+        value = textBox.val().trim();
+        if(value == ""){
+            $('.resultsContainer').html("");
+        }else{
+            searchUsers(value);
+        }
+    },1000);
+});
+
+function searchUsers(searchTerm){
+    $.get("/api/users",{search:searchTerm},results =>{
+        outputSelectableUsers(results,$('.resultsContainer'));
+    });
+}
+
+
+function outputSelectableUsers(results,container){
+    container.html("");
+
+    if(results.length == "" || results.length == 0){
+        container.append('<span class="noResults">No results found</span>')
+    }else{
+
+        results.forEach(results => {
+
+        if(results._id == userLoggedInData._id || selectedUsers.some(u => u._id == results._id)){
+            return;
+        }    
+
+        var html =createUserHtml(results,false);
+        var element = $(html);
+        element.click(()=>userSelected(results))
+        container.append(element);
+        });
+    }
+
+}
+function userSelected(user){
+    selectedUsers.push(user);  
+    updateSelectedUsersHTML(user);
+    $('#userSearchTextbox').val("").focus();
+    $('.resultsContainer').html('');
+    $('#createChatButton').prop("disabled",false);
+}
+
+
+function updateSelectedUsersHTML(){
+    var elements = [];
+
+    selectedUsers.forEach(user =>{
+        var name = user.firstName + " " + user.lastName;
+        var userElement = $(`<span class="selectedUser">${name}</span>`);
+        elements.push(userElement);
+    });
+
+    $('.selectedUser').remove();
+    $('#selectedUsers').prepend(elements)
+}
+
+
+
+
+$('#createChatButton').click(()=>{
+   var data = JSON.stringify(selectedUsers);
+   $.post("/api/chats", { users: data }, chat => {
+
+        if(!chat || !chat._id) return alert("Invalid response from server.");
+
+        window.location.href = `/messages/${chat._id}`;
+    })
+});
+
+
+
+
+
+
 //Function Which will retreet post id 
 // element -> button and will fallow the same ruls 
 function getPostIdFromElement(element){
@@ -249,33 +643,32 @@ function getPostIdFromElement(element){
 
 
 
-function outPutPosts(results,container){
-    container.html(""); 
+function outputPosts(results, container) {
+    container.html("");
 
-    if(!Array.isArray(results)){
-        results = [results]
+    if(!Array.isArray(results)) {
+        results = [results];
     }
 
     results.forEach(result => {
-        var html = createPostHtml(result);
-        container.append(html)
-    }); 
-    if(results == 0){
-        container.append('<span class="noResults">Nothing to show</span>')
+        var html = createPostHtml(result)
+        container.append(html);
+    });
+
+    if (results.length == 0) {
+        container.append("<span class='noResults'>Nothing to show.</span>")
     }
 }
 
-
 function outputPostsWithReplies(results, container) {
     container.html("");
-    console.log(results)
 
     if(results.replyTo !== undefined && results.replyTo._id !== undefined) {
         var html = createPostHtml(results.replyTo)
         container.append(html);
     }
 
-    var mainPostHtml = createPostHtml(results.postData)
+    var mainPostHtml = createPostHtml(results.postData, true)
     container.append(mainPostHtml);
 
     results.replies.forEach(result => {
@@ -284,27 +677,79 @@ function outputPostsWithReplies(results, container) {
     });
 }
 
-// Fallowing/Fallowers
-$(document).on('click',".followButton",(e)=>{
-    var button = $(e.target);
-    var userId = button.data().user;
 
-    $.ajax({
-        url:`/api/users/${userId}/fallow`,
-        type:"PUT",
-        success:(data)=>{
-            console.log(data);
-            // button_like.find('span').text(postData.likes.length || "");
 
-            // if(postData.likes.includes(userLoggedInData._id)){
-            //     button_like.addClass('active')
-            // }else{
-            //     button_like.removeClass('active')
-            // }
-        }
+
+
+function getChatName(chatData){
+    var chatName = chatData.chatName;
+    if(!chatName){
+        var otherChatUsers = getOtherChatsUsers(chatData.users);
+        var namesArray = otherChatUsers.map(user =>user.firstName + " " + user.lastName);
+        chatName =  namesArray.join(", ");
+    }
+    return chatName;
+}
+
+function getOtherChatsUsers(users){
+    if(users.length == 1) return users;
+
+    return users.filter((user)=>{
+        return user._id != userLoggedInData._id;
     });
 
+}
+
+
+function messageRecived(newMessage){
+    if($('.chatContainer').length == 0){
+        //Show Popup Notification
+    }else{
+        addChatMessageHtml(newMessage);
+    }
+    refreshMessagesBadge()
+}
+
+
+//Notification Common js
+
+$(document).on("click",".notification.active", (e)=>{
+    var container = $(e.target);
+
+    var notificationId = container.data().id;
+    var href = container.attr('href');
+    console.log(notificationId)
+    e.preventDefault();
+    var callBack = () => window.location = href;
+    markNotificationAsOpened(notificationId,callBack)
     
 });
 
+function markNotificationAsOpened(notificationId = null,callBack = null){
+    if(callBack == null) callBack = ()=> location.reload();
+    var url = notificationId != null ? `/api/notifications/${notificationId}/markAsOpened` : `/api/notifications/markAsOpened`;
+    console.log(notificationId)
+    $.ajax({
+        url:url,
+        type:"PUT",
+        success:() =>{
+            callBack();
+        }
+    })
+}
 
+$(document).ready(()=>{
+    refreshMessagesBadge();
+})
+
+function refreshMessagesBadge(){
+    $.get("/api/chats",{unreadOnly:true},(data)=>{
+        var numresults = data.length;
+       
+        if(numresults > 0){
+            $('#messagesBadge').text(numresults).addClass('active')
+        }else{
+            $('#messagesBadge').text("").removeClass('active')
+        }
+    })
+}

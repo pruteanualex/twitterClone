@@ -4,20 +4,52 @@ const router = express.Router();
 const bodyParser = require("body-parser")
 const User = require('../../schemas/UserSchema');
 const Post = require('../../schemas/postsSchema');
+const Notification = require('../../schemas/notificationSchema');
 
 
 
 app.use(bodyParser.urlencoded({ extended: false }));
 
-router.get("/", async(req, res, next) => {
+
+router.get("/", async (req, res, next) => {
 
     var searchObj = req.query;
-    console.log(searchObj)
+    
+    if(searchObj.isReply !== undefined) {
+        var isReply = searchObj.isReply == "true";
+        searchObj.replyTo = { $exists: isReply };
+        delete searchObj.isReply;
+    }
+
+    if(searchObj.search !== undefined) {
+        searchObj.content = {$regex: searchObj.search,$options:"i"}
+        delete searchObj.search;
+    }
+
+    // if(searchObj.followingOnly !== undefined) {
+    //     var followingOnly = searchObj.followingOnly == "true";
+
+    //     if(followingOnly) {
+    //         var objectIds = [];
+            
+    //         if(!req.session.user.following) {
+    //             req.session.user.following = [];
+    //         }
+
+    //         req.session.user.following.forEach(user => {
+    //             objectIds.push(user);
+    //         })
+
+    //         objectIds.push(req.session.user._id);
+    //         searchObj.postedBy = { $in: objectIds };
+    //     }
+        
+    //     delete searchObj.followingOnly;
+    // }
 
     var results = await getPosts(searchObj);
-    res.status(200).send(results)
-
-});
+    res.status(200).send(results);
+})
 
 
 router.get("/:id", async (req, res, next) => {
@@ -35,13 +67,11 @@ router.get("/:id", async (req, res, next) => {
         results.replyTo = postData.replyTo;
     }
 
+
     results.replies = await getPosts({ replyTo: postId });
 
     res.status(200).send(results);
 })
-
-
-
 
 
 router.post("/", async(req, res, next) => {
@@ -69,6 +99,12 @@ router.post("/", async(req, res, next) => {
             newPost = await User.populate(newPost,{
                 path:'postedBy'
             })
+            newPost = await Post.populate(newPost,{
+                path:'replayTo'
+            })
+            if(newPost.replayTo !== undefined){
+               await Notification.insertNotification(newPost.replayTo.postedBy,req.session.user._id,"replay",newPost._id);
+            }
             res.status(201).send(newPost)
         })
         .catch((error)=>{
@@ -125,10 +161,40 @@ router.put("/:id/like", async(req, res, next) => {
         console.log(error);
         res.sendStatus(400);
     });
-
+    if(!isLiked){
+        Notification.insertNotification(post.postedBy,userId,"postLike",post._id)
+    }
 
     res.status(200).send(post)
 });
+
+router.delete("/:id", (req, res, next) => {
+    Post.findByIdAndDelete(req.params.id)
+    .then(() => res.sendStatus(202))
+    .catch(error => {
+        console.log(error);
+        res.sendStatus(400);
+    })
+});
+
+router.put("/:id", async (req, res, next) => {
+
+    if(req.body.pinned !== undefined){
+        await Post.updateMany({postedBy:req.session.user},{pinned:false})
+        .catch(error => {
+            console.log(error);
+            res.sendStatus(400);
+        })
+    }
+
+    Post.findByIdAndUpdate(req.params.id,req.body)
+    .then(() => res.sendStatus(204))
+    .catch(error => {
+        console.log(error);
+        res.sendStatus(400);
+    })
+})
+
 
 
 async function getPosts(filter) {

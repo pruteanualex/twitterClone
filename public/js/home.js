@@ -1,5 +1,5 @@
 $(document).ready(()=>{
-
+//,{fallowingOnly:true},
     $.get("/api/posts",(results)=>{
         outPutPosts(results,$('.postContainer'));
       });
