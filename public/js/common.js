@@ -707,4 +707,49 @@ function messageRecived(newMessage){
     }else{
         addChatMessageHtml(newMessage);
     }
+    refreshMessagesBadge()
+}
+
+
+//Notification Common js
+
+$(document).on("click",".notification.active", (e)=>{
+    var container = $(e.target);
+
+    var notificationId = container.data().id;
+    var href = container.attr('href');
+    console.log(notificationId)
+    e.preventDefault();
+    var callBack = () => window.location = href;
+    markNotificationAsOpened(notificationId,callBack)
+    
+});
+
+function markNotificationAsOpened(notificationId = null,callBack = null){
+    if(callBack == null) callBack = ()=> location.reload();
+    var url = notificationId != null ? `/api/notifications/${notificationId}/markAsOpened` : `/api/notifications/markAsOpened`;
+    console.log(notificationId)
+    $.ajax({
+        url:url,
+        type:"PUT",
+        success:() =>{
+            callBack();
+        }
+    })
+}
+
+$(document).ready(()=>{
+    refreshMessagesBadge();
+})
+
+function refreshMessagesBadge(){
+    $.get("/api/chats",{unreadOnly:true},(data)=>{
+        var numresults = data.length;
+       
+        if(numresults > 0){
+            $('#messagesBadge').text(numresults).addClass('active')
+        }else{
+            $('#messagesBadge').text("").removeClass('active')
+        }
+    })
 }

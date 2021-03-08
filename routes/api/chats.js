@@ -48,6 +48,11 @@ router.get("/", async (req, res, next) => {
     .populate("latesMessage")
     .sort({updatedAt:-1})
     .then(async results =>{
+        //Get Notification With unreaded messages
+        if(req.query.unreadOnly !== undefined && req.query.unreadOnly == "true"){
+            results  =results.filter(r => r.latesMessage);
+        }
+
         results = await User.populate(results,{path:"latesMessage.sender"});
         res.status(200).send(results)
     }).catch(error =>{
