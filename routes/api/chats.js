@@ -50,7 +50,7 @@ router.get("/", async (req, res, next) => {
     .then(async results =>{
         //Get Notification With unreaded messages
         if(req.query.unreadOnly !== undefined && req.query.unreadOnly == "true"){
-            results  =results.filter(r => r.latesMessage);
+            results  =results.filter(r => !r.latesMessage.readBy.includes(req.session.user._id));
         }
 
         results = await User.populate(results,{path:"latesMessage.sender"});
@@ -95,6 +95,19 @@ router.get("/:chatId/messages", async (req, res, next) => {
         res.sendStatus(400);
     })
 });
+
+
+router.put("/:chatId/messages/markAsRead", async (req, res, next) => {
+
+    await Message.updateMany({chat:req.params.chatId},{$addToSet:{readBy:req.session.user._id}})
+    .then(() =>{
+        res.sendStatus(200)
+    }).catch(error =>{
+        console.log(error);
+        res.sendStatus(400);
+    })
+});
+
 
 
 module.exports = router;

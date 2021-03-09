@@ -93,6 +93,8 @@ io.on("connection",(socket)=>{
     socket.on('stop typing',(room)=>{
         socket.in(room).emit('stop typing');
     });
+    //Room is user id
+    socket.on("notification recived",(userId)=> socket.in(userId).emit("notification recived"))
     //Dose not work because user.id is undefinde
     //Answer message.js controller
     socket.on('new message',(newMessage)=>{
